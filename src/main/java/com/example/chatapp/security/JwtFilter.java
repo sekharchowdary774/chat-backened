@@ -31,12 +31,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // ✅ Skip authentication for public endpoints and CORS preflight requests
-        if (path.startsWith("/api/auth") || request.getMethod().equalsIgnoreCase("OPTIONS")) {
+        // 🚨 SKIP FILTER for ALL PUBLIC ENDPOINTS declared in SecurityConfig
+        if (
+                path.startsWith("/api/auth") ||
+                        path.startsWith("/api/file") ||
+                        path.startsWith("/api/chat") ||
+                        path.startsWith("/chat") ||            // WebSocket endpoint
+                        path.startsWith("/ws") ||              // WebSocket handshake
+                        path.startsWith("/topic") ||           // STOMP broker
+                        path.startsWith("/app") ||             // STOMP app prefix
+                        request.getMethod().equalsIgnoreCase("OPTIONS")
+        ) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // 🔥 JWT AUTHENTICATION FOR PROTECTED ROUTES
         final String authHeader = request.getHeader("Authorization");
         String email = null;
         String token = null;
@@ -56,7 +66,9 @@ public class JwtFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
                         );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
