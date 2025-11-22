@@ -31,10 +31,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ Public endpoints — no JWT needed
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/api/users/**",   // ✅ allow user search API
+                                "/api/auth/**",     // login / signup / reset
+                                "/api/users/**",    // search users  🔥 YOU MISSED THIS
                                 "/api/file/**",
                                 "/chat/**",
                                 "/ws/**",
@@ -42,8 +41,8 @@ public class SecurityConfig {
                                 "/app/**",
                                 "/api/chat/**"
                         ).permitAll()
-                        .anyRequest().authenticated()
 
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -51,27 +50,26 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS for React frontend
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowedOrigins(List.of(
                 "https://chat-frontend-roan-psi.vercel.app",
                 "http://localhost:3000"
         ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(false);
+
+        // 🔥 CRITICAL FIX (for SockJS + credentials)
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
-
-
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
