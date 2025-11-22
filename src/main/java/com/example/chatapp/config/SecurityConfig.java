@@ -34,16 +34,16 @@ public class SecurityConfig {
                         // ✅ Public endpoints — no JWT needed
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/file/**",     // ✅ allow file proxy & uploads
+                                "/api/users/**",   // ✅ allow user search API
+                                "/api/file/**",
                                 "/chat/**",
                                 "/ws/**",
                                 "/topic/**",
                                 "/app/**",
                                 "/api/chat/**"
                         ).permitAll()
-
-                        // everything else requires authentication
                         .anyRequest().authenticated()
+
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
