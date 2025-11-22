@@ -45,7 +45,6 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         // 🔥 JWT AUTHENTICATION FOR PROTECTED ROUTES
         final String authHeader = request.getHeader("Authorization");
         String email = null;
